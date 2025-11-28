@@ -1,1 +1,1608 @@
-<h1>Welcome to my English corner !!!</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日历查看器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a7b0d4 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+        }
+
+        .month-year {
+            font-size: 18px;
+            color: #6b7dd1;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        button.today {
+            background: #4CAF50;
+        }
+
+        button.today:hover {
+            background: #45a049;
+        }
+
+        .calendar-wrapper {
+            margin-bottom: 20px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 700;
+            color: #3d56ca;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        /* 分组网格视图（筛选后按日期顺序以卡片网格展示） */
+        .grouped-list {
+            display: none;
+            margin-top: 14px;
+            /* 初始最小高度，JS 会在渲染时同步为日历区域高度 */
+            min-height: 520px;
+            width: 100%;
+        }
+
+        .grouped-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            /* 使网格在容器高度大于内容时垂直居中，提升视觉平衡 */
+            min-height: 100%;
+            align-content: center;
+            justify-items: stretch;
+        }
+
+        .grouped-tile {
+            background: #fff;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            min-height: 100px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .grouped-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+        }
+
+        .tile-date {
+            font-weight: 800;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .tile-lunar {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .tile-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .tile-badge {
+            background: #ff9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .tile-thumb {
+            width: 100%;
+            height: 72px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #f5f5f5;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #333;
+            background: #f5f5f5;
+            position: relative;
+            font-size: 12px;
+            min-height: 80px;
+        }
+
+        .day:hover {
+            background: #e8e8ff;
+            transform: scale(1.03);
+        }
+
+        .day.other-month {
+            color: #ccc;
+            background: transparent;
+        }
+
+        .day.today {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .day.selected {
+            background: #764ba2;
+            color: white;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        .day.weekend {
+            color: #f44336;
+        }
+
+        .day.weekend .day-num {
+            color: #f44336;
+        }
+
+        .day-num {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .day-lunar {
+            font-size: 10px;
+            color: #999;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .day.today .day-lunar {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .day.selected .day-lunar {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .day-holiday {
+            font-size: 9px;
+            color: #f44336;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-top: 4px;
+        }
+
+        .day.today .day-holiday {
+            color: #fff;
+        }
+
+        .day.selected .day-holiday {
+            color: #fff;
+        }
+
+        .day-important {
+            border: 2px solid #ff9800;
+        }
+
+        .day-important-reason {
+            font-size: 8px;
+            color: #ff9800;
+            font-weight: 600;
+            line-height: 1.1;
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        /* 日格中的心情：与日期号同行，靠右显示，保证间距 */
+        .day-num {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .day-mood-inline {
+            font-size: 16px;
+            margin-left: 6px;
+            color: #333;
+            vertical-align: middle;
+        }
+
+        /* 卡片中的心情显示（微调间距） */
+        .tile-mood {
+            font-size: 16px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* 筛选后样式：淡出或隐藏不匹配日期 */
+        .filtered-dim {
+            opacity: 0.18;
+            pointer-events: none;
+            filter: grayscale(80%);
+        }
+
+        .filtered-hidden {
+            display: none !important;
+        }
+
+        .day.today .day-important-reason {
+            color: #fff;
+        }
+
+        .day.selected .day-important-reason {
+            color: #fff;
+        }
+
+        .important-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background: #ff9800;
+            border-radius: 50%;
+        }
+
+        .diary-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background: #4CAF50;
+            border-radius: 50%;
+        }
+
+        .quick-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-select button {
+            padding: 8px 16px;
+            font-size: 12px;
+            background: #e8e8ff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .quick-select button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-panel {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-panel h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* 日记模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .mood-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mood-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 28px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .mood-btn.selected {
+            border-color: #667eea;
+            background: #f0f1ff;
+            transform: scale(1.15);
+        }
+
+        .image-upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f9f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .image-upload-area:hover {
+            background: #f0f1ff;
+            border-color: #764ba2;
+        }
+
+        .image-upload-area.dragover {
+            background: #e8e8ff;
+            border-color: #764ba2;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f5;
+            aspect-ratio: 1;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .image-item:hover .image-delete-btn {
+            opacity: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-footer button {
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #e8e8e8;
+            color: #333;
+        }
+
+        .btn-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+            display: none;
+        }
+
+        /* toast 提示样式 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 2200;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .day {
+                min-height: 70px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 日历</h1>
+            <div class="month-year" id="monthYear"></div>
+        </div>
+
+        <div class="controls">
+            <button onclick="previousMonth()">← 上月</button>
+            <button class="today" onclick="goToday()">今天</button>
+            <button onclick="nextMonth()">下月 →</button>
+        </div>
+
+        <!-- 筛选控件：按标签筛选 -->
+        <div class="controls" style="margin-top:12px; gap:8px; align-items:center;">
+            <label style="font-weight:600; color:#333;">分类：</label>
+            <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; min-width:160px;" onchange="onTagFilterChange()">
+                <option value="">全部</option>
+            </select>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666;">
+                <input type="checkbox" id="onlyShowMatching" onchange="onTagFilterChange()"> 只显示匹配日期
+            </label>
+            <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333;">清除筛选</button>
+        </div>
+
+        <div class="quick-select">
+            <button onclick="goToCurrentMonth()">本月</button>
+            <button onclick="goToYearOffset(-1)">去年同月</button>
+            <button onclick="goToYearOffset(1)">明年同月</button>
+        </div>
+
+        <div class="calendar-wrapper">
+            <div class="weekdays">
+                <div class="weekday">日</div>
+                <div class="weekday">一</div>
+                <div class="weekday">二</div>
+                <div class="weekday">三</div>
+                <div class="weekday">四</div>
+                <div class="weekday">五</div>
+                <div class="weekday">六</div>
+            </div>
+            <div class="days" id="daysContainer"></div>
+            <!-- 分组视图：在选中标签时显示，按日期顺序列出匹配日期 -->
+            <div id="groupedList" class="grouped-list"></div>
+        </div>
+
+        <div class="info-panel">
+            <h3>📊 日期信息</h3>
+            <div class="info-item">
+                <span class="info-label">选择日期:</span>
+                <span id="selectedDate">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">星期:</span>
+                <span id="selectedDay">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">是第几周:</span>
+                <span id="weekNumber">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">是第几天:</span>
+                <span id="dayOfYear">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">距今天:</span>
+                <span id="daysFromToday">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">心情:</span>
+                <span id="selectedMood">-</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            💡 点击日期记录日记或标记重要日子
+        </div>
+    </div>
+
+    <!-- 非阻塞提示：toast -->
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true" style="display:none;"></div>
+
+    <!-- 日记记录模态框 -->
+    <div id="diaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">📝 日记记录</h2>
+                <span class="close-btn" onclick="closeDiaryModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择心情</label>
+                    <div class="mood-selector">
+                        <button class="mood-btn" data-mood="😊" title="开心" onclick="selectMood(this)">😊</button>
+                        <button class="mood-btn" data-mood="😔" title="难过" onclick="selectMood(this)">😔</button>
+                        <button class="mood-btn" data-mood="😍" title="喜爱" onclick="selectMood(this)">😍</button>
+                        <button class="mood-btn" data-mood="😴" title="疲惫" onclick="selectMood(this)">😴</button>
+                        <button class="mood-btn" data-mood="😤" title="生气" onclick="selectMood(this)">😤</button>
+                        <button class="mood-btn" data-mood="😎" title="自信" onclick="selectMood(this)">😎</button>
+                        <button class="mood-btn" data-mood="😕" title="困惑" onclick="selectMood(this)">😕</button>
+                        <button class="mood-btn" data-mood="😌" title="平静" onclick="selectMood(this)">😌</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>标题 (可选)</label>
+                    <input type="text" id="diaryTitle" placeholder="输入日记标题...">
+                </div>
+
+                <div class="form-group">
+                    <label>图片</label>
+                    <div class="image-upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                        <div>🖼️</div>
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 5px;">点击上传或拖拽放入图片</div>
+                        <div style="font-size: 12px; color: #999;">支持 JPG、PNG、GIF | 也可直接粘贴</div>
+                    </div>
+                    <input type="file" id="imageInput" multiple accept="image/*" onchange="handleFileSelect(event)">
+                    <div class="image-gallery" id="imageGallery"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="diaryContent" placeholder="记录你今天的点滴..." onpaste="handlePaste(event)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>标签 (可选，用逗号分隔)</label>
+                    <input type="text" id="diaryTags" placeholder="例如：工作, 生活, 旅游">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isImportantDay" onchange="updateImportantDayUI()">
+                        标记为重要日子
+                    </label>
+                </div>
+
+                <div class="form-group" id="importantDayReason" style="display:none;">
+                    <label>重要原因 (可选)</label>
+                    <input type="text" id="importantReason" placeholder="例如：生日、纪念日、截止日期">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeDiaryModal()">取消</button>
+                <button class="btn-delete" id="deleteDiaryBtn" onclick="deleteDiary()">删除</button>
+                <button class="btn-save" onclick="saveDiary()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let diaryData = {};
+        let currentDiaryDate = null;
+        let currentImages = [];
+        let importantDays = {};
+
+        const weekDayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+        // 简化的农历计算（适用于1900-2100年）
+        const lunarData = [
+            '0,1,2,5,7,10,12,15,18,20,22,25,27,30,33,35,37,40,42,45',
+            '47,50,52,55,57,60,62,65,67,69,72,74,77,79,82,84,87,89,92,94',
+            '97,99,102,104,107,109,111,114,116,119,121,124,126,129,131,134,136,138,141,143'
+        ];
+
+        // 简化农历显示 - 使用常见节日标记法
+        function simpleLunarDay(date) {
+            const months = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+            const days = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+                          '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+                          '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
+
+            // 近似农历计算
+            const y = date.getFullYear();
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            
+            // 简单计算：根据公历推算农历（仅供参考）
+            let lunarMonth = m;
+            let lunarDay = d;
+            
+            // 调整（这是近似值）
+            if (m < 2) {
+                lunarMonth = 12;
+                lunarDay = d + 29;
+            } else if (m === 2) {
+                lunarMonth = 1;
+                lunarDay = d - 3;
+            } else {
+                lunarMonth = m - 1;
+                lunarDay = d - 1;
+            }
+            
+            if (lunarDay > 30) {
+                lunarDay -= 30;
+                lunarMonth += 1;
+            }
+            if (lunarDay < 1) {
+                lunarDay += 29;
+                lunarMonth -= 1;
+            }
+            if (lunarMonth > 12) lunarMonth = 1;
+            if (lunarMonth < 1) lunarMonth = 12;
+            
+            return `${months[lunarMonth - 1]}月${days[Math.max(0, Math.min(29, lunarDay - 1))]}`;
+        }
+
+        // 节日节气数据
+        const holidays = {
+            '2025-01-01': { name: '元旦', type: 'holiday' },
+            '2025-01-20': { name: '大寒', type: 'solarterm' },
+            '2025-02-04': { name: '立春', type: 'solarterm' },
+            '2025-02-10': { name: '春节', type: 'holiday' },
+            '2025-03-05': { name: '惊蛰', type: 'solarterm' },
+            '2025-03-20': { name: '春分', type: 'solarterm' },
+            '2025-04-04': { name: '清明', type: 'holiday' },
+            '2025-04-20': { name: '谷雨', type: 'solarterm' },
+            '2025-05-01': { name: '劳动节', type: 'holiday' },
+            '2025-05-06': { name: '立夏', type: 'solarterm' },
+            '2025-05-21': { name: '小满', type: 'solarterm' },
+            '2025-06-10': { name: '端午节', type: 'holiday' },
+            '2025-06-21': { name: '夏至', type: 'solarterm' },
+            '2025-07-07': { name: '小暑', type: 'solarterm' },
+            '2025-07-23': { name: '大暑', type: 'solarterm' },
+            '2025-08-08': { name: '立秋', type: 'solarterm' },
+            '2025-08-23': { name: '处暑', type: 'solarterm' },
+            '2025-09-08': { name: '白露', type: 'solarterm' },
+            '2025-09-17': { name: '中秋节', type: 'holiday' },
+            '2025-09-23': { name: '秋分', type: 'solarterm' },
+            '2025-10-01': { name: '国庆节', type: 'holiday' },
+            '2025-10-08': { name: '寒露', type: 'solarterm' },
+            '2025-10-23': { name: '霜降', type: 'solarterm' },
+            '2025-11-07': { name: '立冬', type: 'solarterm' },
+            '2025-11-22': { name: '小雪', type: 'solarterm' },
+            '2025-12-07': { name: '大雪', type: 'solarterm' },
+            '2025-12-21': { name: '冬至', type: 'solarterm' }
+        };
+
+        // 数据持久化
+        function loadDiaryData() {
+            const saved = localStorage.getItem('diaryData');
+            if (saved) diaryData = JSON.parse(saved);
+        }
+
+        function saveDiaryData() {
+            localStorage.setItem('diaryData', JSON.stringify(diaryData));
+        }
+
+        function loadImportantDays() {
+            const saved = localStorage.getItem('importantDays');
+            if (saved) importantDays = JSON.parse(saved);
+        }
+
+        function saveImportantDays() {
+            localStorage.setItem('importantDays', JSON.stringify(importantDays));
+        }
+
+        // 日期工具函数
+        function getDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getDiary(date) {
+            const key = getDateKey(date);
+            return diaryData[key] || null;
+        }
+
+        function getDateInfo(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const lunarText = simpleLunarDay(date);
+            const holidayInfo = holidays[dateStr];
+            
+            return {
+                lunar: lunarText,
+                holiday: holidayInfo
+            };
+        }
+
+        // 图片处理
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        currentImages.push({
+                            data: e.target.result,
+                            name: file.name,
+                            type: file.type
+                        });
+                        renderImageGallery();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            event.target.value = '';
+        }
+
+        function handlePaste(event) {
+            const items = event.clipboardData?.items;
+            if (!items) return;
+
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        currentImages.push({
+                            data: e.target.result,
+                            name: file.name || 'pasted-' + Date.now(),
+                            type: file.type
+                        });
+                        renderImageGallery();
+                    };
+                    reader.readAsDataURL(file);
+                    event.preventDefault();
+                }
+            }
+        }
+
+        // --------- 标签筛选相关 ---------
+        let selectedTag = '';
+
+        function getAllTagsFromDiary() {
+            const tagsSet = new Set();
+            Object.values(diaryData || {}).forEach(entry => {
+                if (!entry.tags) return;
+                entry.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => tagsSet.add(t));
+            });
+            return Array.from(tagsSet).sort();
+        }
+
+        function populateTagFilter() {
+            const select = document.getElementById('tagFilter');
+            if (!select) return;
+            const tags = getAllTagsFromDiary();
+            // 清空但保留第一个全部选项
+            const currentValue = select.value || '';
+            select.innerHTML = '<option value="">全部</option>';
+            tags.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag;
+                opt.textContent = tag;
+                select.appendChild(opt);
+            });
+            // 如果之前选择的标签还存在则恢复
+            if (currentValue && tags.includes(currentValue)) {
+                select.value = currentValue;
+                selectedTag = currentValue;
+            } else {
+                select.value = '';
+                selectedTag = '';
+            }
+        }
+
+        function renderGroupedList() {
+            const container = document.getElementById('groupedList');
+            container.innerHTML = '';
+            if (!selectedTag) {
+                container.style.display = 'none';
+                return;
+            }
+
+            // 收集匹配的日期键并排序（ISO 格式按字符串排序等同时间顺序）
+            const matched = Object.keys(diaryData || {}).filter(key => {
+                const entry = diaryData[key];
+                if (!entry || !entry.tags) return false;
+                const list = entry.tags.split(',').map(t => t.trim()).filter(Boolean);
+                return list.includes(selectedTag);
+            }).sort();
+
+            if (matched.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'grouped-item';
+                empty.textContent = `未找到标签为 "${selectedTag}" 的日记条目`;
+                container.appendChild(empty);
+                container.style.display = 'block';
+                return;
+            }
+
+            // 创建网格容器
+            const grid = document.createElement('div');
+            grid.className = 'grouped-grid';
+
+            matched.forEach(key => {
+                const entry = diaryData[key];
+                const tile = document.createElement('div');
+                tile.className = 'grouped-tile';
+
+                // 日期
+                const d = new Date(key + 'T00:00:00');
+                const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'tile-date';
+                dateDiv.textContent = dateStr;
+
+                // 农历/节日
+                const info = getDateInfo(new Date(key + 'T00:00:00'));
+                const lunarDiv = document.createElement('div');
+                lunarDiv.className = 'tile-lunar';
+                lunarDiv.textContent = info.lunar + (info.holiday ? (' · ' + info.holiday.name) : '');
+
+                // 缩略图（若有图片）
+                if (entry.images && entry.images.length) {
+                    const img = document.createElement('img');
+                    img.className = 'tile-thumb';
+                    img.src = entry.images[0].data || entry.images[0].src || '';
+                    tile.appendChild(img);
+                }
+
+                // 元信息（标题、心情、图片数、重要标记）
+                const meta = document.createElement('div');
+                meta.className = 'tile-meta';
+                const leftMeta = document.createElement('div');
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = (entry.title || '(无标题)');
+                leftMeta.appendChild(titleSpan);
+                if (entry.mood) {
+                    const moodSpan = document.createElement('span');
+                    moodSpan.className = 'tile-mood';
+                    moodSpan.textContent = entry.mood;
+                    leftMeta.appendChild(moodSpan);
+                }
+
+                const rightMeta = document.createElement('div');
+                let badges = [];
+                if (entry.images && entry.images.length) badges.push(`🖼 ${entry.images.length}`);
+                if (importantDays[key]) badges.push('★');
+                rightMeta.textContent = badges.join(' ');
+                meta.appendChild(leftMeta);
+                meta.appendChild(rightMeta);
+
+                tile.appendChild(dateDiv);
+                tile.appendChild(lunarDiv);
+                tile.appendChild(meta);
+
+                tile.addEventListener('click', () => {
+                    selectDate(new Date(key + 'T00:00:00'));
+                    openDiaryModal(new Date(key + 'T00:00:00'));
+                });
+
+                grid.appendChild(tile);
+            });
+
+            container.appendChild(grid);
+            // 将容器最小高度同步为日历区域高度，保证视觉一致性（即使条目很少也保留空间）
+            const daysContainer = document.getElementById('daysContainer');
+            if (daysContainer) {
+                const h = daysContainer.offsetHeight;
+                container.style.minHeight = h + 'px';
+            }
+            container.style.display = 'block';
+        }
+
+        function onTagFilterChange() {
+            const select = document.getElementById('tagFilter');
+            const onlyShow = document.getElementById('onlyShowMatching')?.checked;
+            selectedTag = select ? select.value : '';
+            // 当选中标签后，渲染分组视图而不是常规日历
+            if (selectedTag) {
+                // 确保 tag 选项已填充
+                populateTagFilter();
+                renderGroupedList();
+                // 隐藏日历网格，显示分组列表
+                document.getElementById('daysContainer').style.display = 'none';
+            } else {
+                document.getElementById('daysContainer').style.display = '';
+                document.getElementById('groupedList').style.display = 'none';
+            }
+            renderCalendar();
+        }
+
+        function clearTagFilter() {
+            const select = document.getElementById('tagFilter');
+            const onlyBox = document.getElementById('onlyShowMatching');
+            if (select) select.value = '';
+            if (onlyBox) onlyBox.checked = false;
+            selectedTag = '';
+            // 恢复日历视图
+            document.getElementById('daysContainer').style.display = '';
+            document.getElementById('groupedList').style.display = 'none';
+            renderCalendar();
+        }
+
+        function renderImageGallery() {
+            const gallery = document.getElementById('imageGallery');
+            gallery.innerHTML = '';
+            currentImages.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'image-item';
+                item.innerHTML = `
+                    <img src="${img.data}" alt="图片">
+                    <button class="image-delete-btn" onclick="deleteImage(${index})">×</button>
+                `;
+                gallery.appendChild(item);
+            });
+        }
+
+        function deleteImage(index) {
+            currentImages.splice(index, 1);
+            renderImageGallery();
+        }
+
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea) return;
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            currentImages.push({
+                                data: evt.target.result,
+                                name: file.name,
+                                type: file.type
+                            });
+                            renderImageGallery();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        // 日记模态框
+        function openDiaryModal(date) {
+            currentDiaryDate = new Date(date);
+            const diary = getDiary(date);
+            const dateStr = date.toLocaleDateString('zh-CN');
+            const dateKey = getDateKey(date);
+
+            document.getElementById('modalTitle').textContent = `📝 日记记录 - ${dateStr}`;
+
+            document.getElementById('diaryTitle').value = '';
+            document.getElementById('diaryContent').value = '';
+            document.getElementById('diaryTags').value = '';
+            document.getElementById('isImportantDay').checked = false;
+            document.getElementById('importantReason').value = '';
+            currentImages = [];
+
+            document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+
+            if (diary) {
+                document.getElementById('diaryTitle').value = diary.title || '';
+                document.getElementById('diaryContent').value = diary.content || '';
+                document.getElementById('diaryTags').value = diary.tags || '';
+
+                if (diary.images && diary.images.length > 0) {
+                    currentImages = JSON.parse(JSON.stringify(diary.images));
+                    renderImageGallery();
+                }
+
+                if (diary.mood) {
+                    document.querySelectorAll('.mood-btn').forEach(btn => {
+                        if (btn.dataset.mood === diary.mood) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                }
+
+                document.getElementById('deleteDiaryBtn').style.display = 'block';
+            } else {
+                document.getElementById('deleteDiaryBtn').style.display = 'none';
+                renderImageGallery();
+            }
+
+            if (importantDays[dateKey]) {
+                document.getElementById('isImportantDay').checked = true;
+                document.getElementById('importantReason').value = importantDays[dateKey];
+            }
+
+            updateImportantDayUI();
+            setupDragAndDrop();
+            document.getElementById('diaryModal').style.display = 'block';
+        }
+
+        function closeDiaryModal() {
+            document.getElementById('diaryModal').style.display = 'none';
+        }
+
+        function updateImportantDayUI() {
+            const isImportant = document.getElementById('isImportantDay').checked;
+            document.getElementById('importantDayReason').style.display = isImportant ? 'block' : 'none';
+        }
+
+        function selectMood(btn) {
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function saveDiary() {
+            if (!currentDiaryDate) return;
+
+            const title = document.getElementById('diaryTitle').value.trim();
+            const content = document.getElementById('diaryContent').value.trim();
+            const tags = document.getElementById('diaryTags').value.trim();
+            const selectedMood = document.querySelector('.mood-btn.selected');
+            const mood = selectedMood ? selectedMood.dataset.mood : '';
+
+            if (!content) {
+                alert('请输入日记内容');
+                return;
+            }
+
+            const key = getDateKey(currentDiaryDate);
+            diaryData[key] = {
+                date: key,
+                title: title,
+                content: content,
+                mood: mood,
+                tags: tags,
+                images: currentImages,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            const isImportant = document.getElementById('isImportantDay').checked;
+            const importantReason = document.getElementById('importantReason').value.trim();
+
+            if (isImportant) {
+                importantDays[key] = importantReason || '重要日子';
+            } else {
+                delete importantDays[key];
+            }
+
+            saveDiaryData();
+            saveImportantDays();
+            closeDiaryModal();
+            populateTagFilter();
+            renderCalendar();
+            updateInfoPanel();
+            showToast('日记已保存');
+        }
+
+        function deleteDiary() {
+            if (!currentDiaryDate) return;
+
+            if (!confirm('确定要删除这条日记吗？')) return;
+
+            const key = getDateKey(currentDiaryDate);
+            delete diaryData[key];
+            delete importantDays[key];
+            saveDiaryData();
+            saveImportantDays();
+            closeDiaryModal();
+            populateTagFilter();
+            renderCalendar();
+            updateInfoPanel();
+            showToast('日记已删除');
+        }
+
+        // 日历渲染
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('monthYear').textContent = `${year}年 ${monthNames[month]}`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDate = firstDay.getDay();
+
+            const daysContainer = document.getElementById('daysContainer');
+            daysContainer.innerHTML = '';
+
+            // 上月日期
+            const prevLastDay = new Date(year, month, 0).getDate();
+            for (let i = startDate - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.textContent = prevLastDay - i;
+                daysContainer.appendChild(day);
+            }
+
+            // 当月日期
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = document.createElement('div');
+                day.className = 'day';
+                
+                const currentFullDate = new Date(year, month, i);
+                const today = new Date();
+                const dateKey = getDateKey(currentFullDate);
+
+                // 日期号
+                const dayNum = document.createElement('div');
+                dayNum.className = 'day-num';
+                dayNum.textContent = i;
+
+                // 农历
+                const dateInfo = getDateInfo(currentFullDate);
+                const lunarDiv = document.createElement('div');
+                lunarDiv.className = 'day-lunar';
+                lunarDiv.textContent = dateInfo.lunar;
+
+                // 节日/节气
+                const holidayDiv = document.createElement('div');
+                holidayDiv.className = 'day-holiday';
+                if (dateInfo.holiday) {
+                    holidayDiv.textContent = dateInfo.holiday.name;
+                }
+
+                day.appendChild(dayNum);
+                day.appendChild(lunarDiv);
+                if (dateInfo.holiday) {
+                    day.appendChild(holidayDiv);
+                }
+
+                // 筛选判定
+                const onlyShow = document.getElementById('onlyShowMatching')?.checked;
+                let matchesTag = true;
+                const diaryForDay = getDiary(currentFullDate);
+                if (selectedTag) {
+                    if (!diaryForDay || !diaryForDay.tags) {
+                        matchesTag = false;
+                    } else {
+                        const tagList = diaryForDay.tags.split(',').map(t => t.trim()).filter(Boolean);
+                        matchesTag = tagList.includes(selectedTag);
+                    }
+                }
+
+                // 样式处理
+                if (currentFullDate.toDateString() === today.toDateString()) {
+                    day.classList.add('today');
+                }
+
+                if (currentFullDate.getDay() === 0 || currentFullDate.getDay() === 6) {
+                    day.classList.add('weekend');
+                }
+
+                if (currentFullDate.toDateString() === selectedDate.toDateString()) {
+                    day.classList.add('selected');
+                }
+
+                if (importantDays[dateKey]) {
+                    day.classList.add('day-important');
+                    const badge = document.createElement('div');
+                    badge.className = 'important-badge';
+                    day.appendChild(badge);
+                    
+                    // 显示重要日子原因
+                    const reasonDiv = document.createElement('div');
+                    reasonDiv.className = 'day-important-reason';
+                    reasonDiv.textContent = importantDays[dateKey];
+                    day.appendChild(reasonDiv);
+                }
+
+                // 如果在筛选模式下且不匹配，则根据设置淡出或隐藏
+                if (selectedTag && !matchesTag) {
+                    if (onlyShow) {
+                        day.classList.add('filtered-hidden');
+                    } else {
+                        day.classList.add('filtered-dim');
+                    }
+                } else {
+                    // 事件
+                    day.addEventListener('click', () => {
+                        selectDate(currentFullDate);
+                        setTimeout(() => openDiaryModal(currentFullDate), 100);
+                    });
+                }
+
+                // 日记指示（如果匹配或未筛选）
+                if (diaryForDay && (!selectedTag || matchesTag)) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'diary-indicator';
+                    day.appendChild(indicator);
+
+                    // 显示心情表情（若有）
+                    if (diaryForDay.mood) {
+                        const moodSpan = document.createElement('span');
+                        moodSpan.className = 'day-mood-inline';
+                        moodSpan.textContent = diaryForDay.mood;
+                        // 把心情放入 dayNum 内，这样心情与数字同行，不会影响下方农历/节日的布局
+                        if (dayNum) {
+                            dayNum.appendChild(moodSpan);
+                        } else {
+                            day.appendChild(moodSpan);
+                        }
+                    }
+                }
+
+                daysContainer.appendChild(day);
+            }
+
+            // 下月日期
+            const totalCells = daysContainer.children.length;
+            const remainingCells = 42 - totalCells;
+            for (let i = 1; i <= remainingCells; i++) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.textContent = i;
+                daysContainer.appendChild(day);
+            }
+        }
+
+        // 日期选择和导航
+        function selectDate(date) {
+            selectedDate = new Date(date);
+            updateInfoPanel();
+            renderCalendar();
+        }
+
+        function updateInfoPanel() {
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth() + 1;
+            const day = selectedDate.getDate();
+            const dayOfWeek = selectedDate.getDay();
+
+            document.getElementById('selectedDate').textContent = `${year}年${month}月${day}日`;
+            document.getElementById('selectedDay').textContent = weekDayNames[dayOfWeek];
+
+            const firstDay = new Date(year, 0, 1);
+            const pastDaysOfYear = (selectedDate - firstDay) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDay.getDay() + 1) / 7);
+            document.getElementById('weekNumber').textContent = `第${weekNumber}周`;
+
+            const dayOfYear = Math.floor((selectedDate - new Date(year, 0, 0)) / 86400000);
+            document.getElementById('dayOfYear').textContent = `第${dayOfYear}天`;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDateCopy = new Date(selectedDate);
+            selectedDateCopy.setHours(0, 0, 0, 0);
+            const diffTime = selectedDateCopy - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                document.getElementById('daysFromToday').textContent = '今天';
+            } else if (diffDays > 0) {
+                document.getElementById('daysFromToday').textContent = `后${diffDays}天`;
+            } else {
+                document.getElementById('daysFromToday').textContent = `前${Math.abs(diffDays)}天`;
+            }
+
+            // 显示所选日期的心情（若有）
+            const diary = getDiary(selectedDate);
+            document.getElementById('selectedMood').textContent = diary && diary.mood ? diary.mood : '-';
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function goToday() {
+            currentDate = new Date();
+            selectedDate = new Date();
+            updateInfoPanel();
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        function goToYearOffset(offset) {
+            const newDate = new Date();
+            newDate.setFullYear(newDate.getFullYear() + offset);
+            currentDate = newDate;
+            renderCalendar();
+        }
+
+        // 模态框外点击关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('diaryModal');
+            if (event.target === modal) {
+                closeDiaryModal();
+            }
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDiaryData();
+            loadImportantDays();
+            populateTagFilter();
+            renderCalendar();
+            updateInfoPanel();
+        });
+
+        // 非阻塞 toast 提示
+        function showToast(msg, duration = 1500) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            toast.classList.add('show');
+            if (toast._timer) clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => {
+                toast.classList.remove('show');
+                // 等动画结束后隐藏
+                setTimeout(() => toast.style.display = 'none', 250);
+            }, duration);
+        }
+    </script>
+</body>
+</html>
