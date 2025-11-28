@@ -13,44 +13,46 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #a7b0d4 0%, #764ba2 100%);
+            background-color: #6b7dd1;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px;
+            margin: 0;
         }
 
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
+            padding: 40px;
             max-width: 700px;
             width: 100%;
+            margin: 20px auto;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .header h1 {
-            font-size: 28px;
+            font-size: 32px;
             color: #333;
         }
 
         .month-year {
-            font-size: 18px;
+            font-size: 20px;
             color: #6b7dd1;
             font-weight: 600;
         }
 
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
 
         button {
@@ -79,28 +81,30 @@
         }
 
         .calendar-wrapper {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
         .weekday {
             text-align: center;
             font-weight: 700;
             color: #3d56ca;
-            padding: 10px;
-            font-size: 14px;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
         }
 
         .days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 12px;
         }
 
         /* 分组网格视图（筛选后按日期顺序以卡片网格展示） */
@@ -662,17 +666,22 @@
         }
 
         .filter-controls {
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 20px;
                 overflow-x: hidden;
-                display: block;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
                 min-height: 100vh;
+                box-sizing: border-box;
             }
             
             .container {
@@ -682,6 +691,7 @@
                 margin: 0 auto;
                 transform: scale(1);
                 transition: transform 0.3s ease;
+                box-sizing: border-box;
             }
         }
         
@@ -713,15 +723,19 @@
         </div>
 
         <!-- 筛选控件：按标签筛选 -->
-        <div class="controls filter-controls" style="margin-top:12px; gap:8px; align-items:center;">
-            <label style="font-weight:600; color:#333; display:inline-block; margin-bottom:0;">分类：</label>
-            <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; min-width:160px; width:auto;" onchange="onTagFilterChange()">
-                <option value="">全部</option>
-            </select>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666; margin-top:0;">
-                <input type="checkbox" id="onlyShowMatching" onchange="onTagFilterChange()"> 只显示匹配日期
-            </label>
-            <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333; width:auto; margin-top:0;">清除筛选</button>
+        <div class="controls filter-controls" style="margin-top:12px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <label style="font-weight:600; color:#333; display:inline-block; white-space:nowrap;">分类：</label>
+                <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; flex:1;" onchange="onTagFilterChange()">
+                    <option value="">全部</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666; flex:1;">
+                    <input type="checkbox" id="onlyShowMatching" onchange="onTagFilterChange()"> 只显示匹配日期
+                </label>
+                <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333; padding:8px 16px;">清除筛选</button>
+            </div>
         </div>
 
         <div class="quick-select">
@@ -1719,14 +1733,20 @@
             // 限制最小缩放比例
             scale = Math.max(scale, 0.4);
             
-            // 应用缩放
-            container.style.transform = `scale(${scale})`;
+            // 应用缩放和居中
+            container.style.transform = `scale(${scale}) translateX(-50%)`;
+            container.style.transformOrigin = 'top left';
             
-            // 调整容器的margin-top以适应缩放
-            const originalHeight = container.offsetHeight;
-            const scaledHeight = originalHeight * scale;
-            const verticalMargin = (window.innerHeight - scaledHeight) / 2;
-            container.style.marginTop = `${Math.max(verticalMargin, 10)}px`;
+            // 设置left为50%，配合transform: translateX(-50%)实现水平居中
+            container.style.position = 'relative';
+            container.style.left = '50%';
+            
+            // 设置margin-top，提供顶部空间
+            container.style.margin = '20px 0 0';
+            
+            // 确保容器宽度固定，不会随内容变化
+            container.style.width = '700px';
+            container.style.maxWidth = 'none';
         }
 
         // 非阻塞 toast 提示
