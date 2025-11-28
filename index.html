@@ -186,13 +186,16 @@
             padding: 5px;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
             font-weight: 600;
             color: #333;
             background: #f5f5f5;
             position: relative;
             font-size: 12px;
             min-height: 80px;
+            touch-action: manipulation;
         }
 
         .day:hover {
@@ -658,27 +661,40 @@
             pointer-events: auto;
         }
 
-        @media (max-width: 480px) {
+        .filter-controls {
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                overflow-x: hidden;
+                display: block;
+                min-height: 100vh;
+            }
+            
             .container {
-                padding: 20px;
+                width: 700px;
+                max-width: none;
+                transform-origin: top center;
+                margin: 0 auto;
+                transform: scale(1);
+                transition: transform 0.3s ease;
             }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .controls {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            .day {
-                min-height: 70px;
-                font-size: 11px;
+        }
+        
+        /* 模态框在缩放模式下的适配 */
+        @media (max-width: 768px) {
+            .modal-content {
+                transform-origin: top center;
+                width: 90%;
+                max-width: 600px;
+                margin: 20px auto;
+                border-radius: 20px;
+                max-height: 80vh;
+                overflow-y: auto;
             }
         }
     </style>
@@ -697,15 +713,15 @@
         </div>
 
         <!-- 筛选控件：按标签筛选 -->
-        <div class="controls" style="margin-top:12px; gap:8px; align-items:center;">
-            <label style="font-weight:600; color:#333;">分类：</label>
-            <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; min-width:160px;" onchange="onTagFilterChange()">
+        <div class="controls filter-controls" style="margin-top:12px; gap:8px; align-items:center;">
+            <label style="font-weight:600; color:#333; display:inline-block; margin-bottom:0;">分类：</label>
+            <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; min-width:160px; width:auto;" onchange="onTagFilterChange()">
                 <option value="">全部</option>
             </select>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666; margin-top:0;">
                 <input type="checkbox" id="onlyShowMatching" onchange="onTagFilterChange()"> 只显示匹配日期
             </label>
-            <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333;">清除筛选</button>
+            <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333; width:auto; margin-top:0;">清除筛选</button>
         </div>
 
         <div class="quick-select">
@@ -997,7 +1013,7 @@
             '2025-08-08': { name: '立秋', type: 'solarterm' },
             '2025-08-23': { name: '处暑', type: 'solarterm' },
             '2025-09-08': { name: '白露', type: 'solarterm' },
-            '2025-10-06': { name: '中秋节', type: 'holiday' },
+            '2025-09-17': { name: '中秋节', type: 'holiday' },
             '2025-09-23': { name: '秋分', type: 'solarterm' },
             '2025-10-01': { name: '国庆节', type: 'holiday' },
             '2025-10-08': { name: '寒露', type: 'solarterm' },
@@ -1671,7 +1687,47 @@
             populateTagFilter();
             renderCalendar();
             updateInfoPanel();
+            
+            // 初始化缩放
+            initScaling();
         });
+        
+        // 初始化缩放
+        function initScaling() {
+            // 只在移动设备上应用缩放
+            if (window.innerWidth <= 768) {
+                scaleContainer();
+                
+                // 窗口大小改变时重新计算缩放
+                window.addEventListener('resize', scaleContainer);
+            }
+        }
+        
+        // 计算并应用合适的缩放比例
+        function scaleContainer() {
+            const container = document.querySelector('.container');
+            const containerWidth = 700; // 容器原始宽度
+            const screenWidth = window.innerWidth;
+            const padding = 20; // 屏幕两侧的内边距
+            
+            // 计算最大可用宽度
+            const availableWidth = screenWidth - padding * 2;
+            
+            // 计算缩放比例
+            let scale = availableWidth / containerWidth;
+            
+            // 限制最小缩放比例
+            scale = Math.max(scale, 0.4);
+            
+            // 应用缩放
+            container.style.transform = `scale(${scale})`;
+            
+            // 调整容器的margin-top以适应缩放
+            const originalHeight = container.offsetHeight;
+            const scaledHeight = originalHeight * scale;
+            const verticalMargin = (window.innerHeight - scaledHeight) / 2;
+            container.style.marginTop = `${Math.max(verticalMargin, 10)}px`;
+        }
 
         // 非阻塞 toast 提示
         function showToast(msg, duration = 1500) {
