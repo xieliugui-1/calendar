@@ -681,6 +681,11 @@
         }
 
         @media (max-width: 768px) {
+            html, body {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+
             body {
                 padding: 12px;
                 overflow-x: hidden;
@@ -692,7 +697,7 @@
             }
 
             .container {
-                width: 100%;
+                width: min(680px, 100%);
                 max-width: 680px;
                 padding: 20px;
                 margin: 12px auto;
@@ -701,6 +706,15 @@
                 transform: none !important;
                 left: auto !important;
                 position: relative !important;
+            }
+
+            .day,
+            .weekday {
+                min-width: 0;
+            }
+
+            .day {
+                min-height: 0;
             }
 
             .header h1 {
