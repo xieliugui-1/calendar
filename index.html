@@ -31,6 +31,9 @@
             max-width: 700px;
             width: 100%;
             margin: 20px auto;
+            transform: none !important;
+            position: relative !important;
+            left: auto !important;
         }
 
         .header {
@@ -746,8 +749,15 @@
                 font-size: 12px;
             }
 
+            .calendar-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 6px;
+            }
+
             .days {
                 gap: 6px;
+                min-width: 560px;
             }
 
             .day {
@@ -810,6 +820,50 @@
                 width: 44px;
                 height: 44px;
                 font-size: 24px;
+            }
+        }
+
+        /* 更小屏：列表卡片式日历，避免横向滚动 */
+        @media (max-width: 640px) {
+            .weekdays {
+                display: none;
+            }
+
+            .calendar-wrapper {
+                overflow-x: hidden;
+            }
+
+            .days {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-width: auto;
+            }
+
+            .day {
+                width: 100%;
+                aspect-ratio: auto;
+                min-height: auto;
+                padding: 12px;
+                border-radius: 14px;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            }
+
+            .day-num {
+                font-size: 16px;
+            }
+
+            .day-lunar {
+                font-size: 12px;
+            }
+
+            .day-holiday {
+                font-size: 11px;
+            }
+
+            .day.selected,
+            .day.today {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
             }
         }
     </style>
