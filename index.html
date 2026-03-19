@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,7 +131,7 @@
             background: #fff;
             border-radius: 10px;
             padding: 10px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -141,7 +142,7 @@
 
         .grouped-tile:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
         }
 
         .tile-date {
@@ -246,11 +247,11 @@
         }
 
         .day.today .day-lunar {
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .day.selected .day-lunar {
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .day-holiday {
@@ -422,8 +423,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-content {
@@ -442,6 +448,7 @@
                 transform: translateY(50px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -648,7 +655,7 @@
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%) translateY(10px);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: #fff;
             padding: 10px 14px;
             border-radius: 10px;
@@ -675,7 +682,7 @@
 
         @media (max-width: 768px) {
             body {
-                padding: 20px;
+                padding: 12px;
                 overflow-x: hidden;
                 display: flex;
                 justify-content: center;
@@ -683,32 +690,117 @@
                 min-height: 100vh;
                 box-sizing: border-box;
             }
-            
+
             .container {
-                width: 700px;
-                max-width: none;
-                transform-origin: top center;
-                margin: 0 auto;
-                transform: scale(1);
-                transition: transform 0.3s ease;
+                width: 100%;
+                max-width: 680px;
+                padding: 20px;
+                margin: 12px auto;
+                border-radius: 18px;
                 box-sizing: border-box;
+                transform: none !important;
+                left: auto !important;
+                position: relative !important;
             }
-        }
-        
-        /* 模态框在缩放模式下的适配 */
-        @media (max-width: 768px) {
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .month-year {
+                font-size: 18px;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .controls button {
+                flex: 1 1 120px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .weekdays {
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .weekday {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+
+            .days {
+                gap: 6px;
+            }
+
+            .day {
+                padding: 4px;
+                min-height: 60px;
+                font-size: 11px;
+            }
+
+            .day-num {
+                font-size: 12px;
+            }
+
+            .day-lunar {
+                font-size: 9px;
+            }
+
+            .quick-select {
+                gap: 8px;
+            }
+
+            .quick-select button {
+                flex: 1 1 calc(33.333% - 8px);
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            .info-panel {
+                padding: 16px;
+            }
+
+            .info-panel h3 {
+                font-size: 15px;
+            }
+
+            .info-item {
+                font-size: 13px;
+            }
+
             .modal-content {
-                transform-origin: top center;
-                width: 90%;
-                max-width: 600px;
-                margin: 20px auto;
-                border-radius: 20px;
+                width: 95%;
+                max-width: 520px;
+                margin: 16px auto;
+                border-radius: 18px;
                 max-height: 80vh;
                 overflow-y: auto;
+                padding: 20px;
+            }
+
+            .modal-body {
+                max-height: 65vh;
+            }
+
+            .form-group input,
+            .form-group textarea {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .mood-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -726,7 +818,8 @@
         <div class="controls filter-controls" style="margin-top:12px;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
                 <label style="font-weight:600; color:#333; display:inline-block; white-space:nowrap;">分类：</label>
-                <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; flex:1;" onchange="onTagFilterChange()">
+                <select id="tagFilter" style="padding:8px; border-radius:6px; border:1px solid #e0e0e0; flex:1;"
+                    onchange="onTagFilterChange()">
                     <option value="">全部</option>
                 </select>
             </div>
@@ -734,7 +827,8 @@
                 <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#666; flex:1;">
                     <input type="checkbox" id="onlyShowMatching" onchange="onTagFilterChange()"> 只显示匹配日期
                 </label>
-                <button onclick="clearTagFilter()" style="background:#e8e8e8; color:#333; padding:8px 16px;">清除筛选</button>
+                <button onclick="clearTagFilter()"
+                    style="background:#e8e8e8; color:#333; padding:8px 16px;">清除筛选</button>
             </div>
         </div>
 
@@ -824,7 +918,8 @@
 
                 <div class="form-group">
                     <label>图片</label>
-                    <div class="image-upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                    <div class="image-upload-area" id="uploadArea"
+                        onclick="document.getElementById('imageInput').click()">
                         <div>🖼️</div>
                         <div style="font-weight: 600; color: #667eea; margin-bottom: 5px;">点击上传或拖拽放入图片</div>
                         <div style="font-size: 12px; color: #999;">支持 JPG、PNG、GIF | 也可直接粘贴</div>
@@ -889,12 +984,12 @@
         function simpleLunarDay(date) {
             const lunarMonthNames = ['*', '正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '腊'];
             const lunarDayNames = ['*', '初一', '初二', '初三', '初四', '初五',
-                                   '初六', '初七', '初八', '初九', '初十',
-                                   '十一', '十二', '十三', '十四', '十五',
-                                   '十六', '十七', '十八', '十九', '二十',
-                                   '廿一', '廿二', '廿三', '廿四', '廿五',
-                                   '廿六', '廿七', '廿八', '廿九', '三十'];
-            
+                '初六', '初七', '初八', '初九', '初十',
+                '十一', '十二', '十三', '十四', '十五',
+                '十六', '十七', '十八', '十九', '二十',
+                '廿一', '廿二', '廿三', '廿四', '廿五',
+                '廿六', '廿七', '廿八', '廿九', '三十'];
+
             // 农历数据表（1901-2099年）
             const lunarCalendarTable = [
                 0x04AE53, 0x0A5748, 0x5526BD, 0x0D2650, 0x0D9544, 0x46AAB9, 0x056A4D, 0x09AD42, 0x24AEB6, 0x04AE4A,
@@ -918,47 +1013,47 @@
                 0x069349, 0x7729BD, 0x06AA51, 0x0AD546, 0x54DABA, 0x04B64E, 0x0A5743, 0x452738, 0x0D264A, 0x8E933E,
                 0x0D5252, 0x0DAA47, 0x66B53B, 0x056D4F, 0x04AE45, 0x4A4EB9, 0x0A4D4C, 0x0D1541, 0x2D92B5
             ];
-            
+
             const monthAdd = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-            
+
             const year = date.getFullYear();
             const month = date.getMonth() + 1;
             const day = date.getDate();
-            
+
             if (year < 1901 || year > 2099) {
                 return '农历';
             }
-            
+
             let springNY, sunNY;
-            
+
             // Spring_NY 记录春节离当年元旦的天数
             if (((lunarCalendarTable[year - 1901] & 0x0060) >> 5) === 1) {
                 springNY = (lunarCalendarTable[year - 1901] & 0x001F) - 1;
             } else {
                 springNY = (lunarCalendarTable[year - 1901] & 0x001F) - 1 + 31;
             }
-            
+
             // Sun_NY 记录阳历日离当年元旦的天数
             sunNY = monthAdd[month - 1] + day - 1;
             if (!(year % 4) && month > 2) {
                 sunNY++;
             }
-            
+
             let lunarMonth, lunarDay, isLeap = 0;
-            
+
             if (sunNY >= springNY) {
                 // 阳历日在春节后（含春节那天）
                 sunNY -= springNY;
                 lunarMonth = 1;
                 let index = 1;
                 let flag = 0;
-                
+
                 let staticDayCount = ((lunarCalendarTable[year - 1901] & (0x80000 >> (index - 1))) === 0) ? 29 : 30;
-                
+
                 while (sunNY >= staticDayCount) {
                     sunNY -= staticDayCount;
                     index++;
-                    
+
                     if (lunarMonth === ((lunarCalendarTable[year - 1901] & 0xF00000) >> 20)) {
                         flag = flag ? 0 : 1;
                         if (flag === 0) {
@@ -967,10 +1062,10 @@
                     } else {
                         lunarMonth++;
                     }
-                    
+
                     staticDayCount = ((lunarCalendarTable[year - 1901] & (0x80000 >> (index - 1))) === 0) ? 29 : 30;
                 }
-                
+
                 lunarDay = sunNY + 1;
                 if (lunarMonth === ((lunarCalendarTable[year - 1901] & 0xF00000) >> 20)) {
                     isLeap = 1;
@@ -980,30 +1075,30 @@
                 springNY -= sunNY;
                 let targetYear = year - 1;
                 lunarMonth = 12;
-                
+
                 let index = ((lunarCalendarTable[targetYear - 1901] & 0xF00000) >> 20) === 0 ? 12 : 13;
                 let flag = 0;
-                
+
                 let staticDayCount = ((lunarCalendarTable[targetYear - 1901] & (0x80000 >> (index - 1))) === 0) ? 29 : 30;
-                
+
                 while (springNY > staticDayCount) {
                     springNY -= staticDayCount;
                     index--;
-                    
+
                     if (flag === 0) {
                         lunarMonth--;
                     }
-                    
+
                     if (lunarMonth === ((lunarCalendarTable[targetYear - 1901] & 0xF00000) >> 20)) {
                         flag = flag ? 0 : 1;
                     }
-                    
+
                     staticDayCount = ((lunarCalendarTable[targetYear - 1901] & (0x80000 >> (index - 1))) === 0) ? 29 : 30;
                 }
-                
+
                 lunarDay = staticDayCount - springNY + 1;
             }
-            
+
             return `${lunarMonthNames[lunarMonth]}月${lunarDayNames[lunarDay]}`;
         }
 
@@ -1073,9 +1168,9 @@
         function getDateInfo(date) {
             const dateStr = getDateKey(date);
             const lunarText = simpleLunarDay(date);
-            const holidayInfo = holidays[dateStr]; 
-            
-            
+            const holidayInfo = holidays[dateStr];
+
+
             return {
                 lunar: lunarText,
                 holiday: holidayInfo
@@ -1088,7 +1183,7 @@
             for (let file of files) {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         currentImages.push({
                             data: e.target.result,
                             name: file.name,
@@ -1110,7 +1205,7 @@
                 if (item.type.startsWith('image/')) {
                     const file = item.getAsFile();
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         currentImages.push({
                             data: e.target.result,
                             name: file.name || 'pasted-' + Date.now(),
@@ -1195,7 +1290,7 @@
 
                 // 日期
                 const d = new Date(key + 'T00:00:00');
-                const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+                const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
                 const dateDiv = document.createElement('div');
                 dateDiv.className = 'tile-date';
                 dateDiv.textContent = dateStr;
@@ -1327,7 +1422,7 @@
                 for (let file of files) {
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
-                        reader.onload = function(evt) {
+                        reader.onload = function (evt) {
                             currentImages.push({
                                 data: evt.target.result,
                                 name: file.name,
@@ -1496,7 +1591,7 @@
             for (let i = 1; i <= daysInMonth; i++) {
                 const day = document.createElement('div');
                 day.className = 'day';
-                
+
                 const currentFullDate = new Date(year, month, i);
                 const today = new Date();
                 const dateKey = getDateKey(currentFullDate);
@@ -1556,7 +1651,7 @@
                     const badge = document.createElement('div');
                     badge.className = 'important-badge';
                     day.appendChild(badge);
-                    
+
                     // 显示重要日子原因
                     const reasonDiv = document.createElement('div');
                     reasonDiv.className = 'day-important-reason';
@@ -1687,7 +1782,7 @@
         }
 
         // 模态框外点击关闭
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('diaryModal');
             if (event.target === modal) {
                 closeDiaryModal();
@@ -1701,52 +1796,24 @@
             populateTagFilter();
             renderCalendar();
             updateInfoPanel();
-            
+
             // 初始化缩放
             initScaling();
         });
-        
-        // 初始化缩放
+
+        // 初始化（移动端采用响应式 CSS，无需 JS 缩放）
         function initScaling() {
-            // 只在移动设备上应用缩放
-            if (window.innerWidth <= 768) {
-                scaleContainer();
-                
-                // 窗口大小改变时重新计算缩放
-                window.addEventListener('resize', scaleContainer);
-            }
-        }
-        
-        // 计算并应用合适的缩放比例
-        function scaleContainer() {
             const container = document.querySelector('.container');
-            const containerWidth = 700; // 容器原始宽度
-            const screenWidth = window.innerWidth;
-            const padding = 20; // 屏幕两侧的内边距
-            
-            // 计算最大可用宽度
-            const availableWidth = screenWidth - padding * 2;
-            
-            // 计算缩放比例
-            let scale = availableWidth / containerWidth;
-            
-            // 限制最小缩放比例
-            scale = Math.max(scale, 0.4);
-            
-            // 应用缩放和居中
-            container.style.transform = `scale(${scale}) translateX(-50%)`;
-            container.style.transformOrigin = 'top left';
-            
-            // 设置left为50%，配合transform: translateX(-50%)实现水平居中
-            container.style.position = 'relative';
-            container.style.left = '50%';
-            
-            // 设置margin-top，提供顶部空间
-            container.style.margin = '20px 0 0';
-            
-            // 确保容器宽度固定，不会随内容变化
-            container.style.width = '700px';
-            container.style.maxWidth = 'none';
+            if (!container) return;
+
+            // 清理旧版可能遗留的 inline 缩放/定位样式
+            container.style.transform = '';
+            container.style.transformOrigin = '';
+            container.style.position = '';
+            container.style.left = '';
+            container.style.margin = '';
+            container.style.width = '';
+            container.style.maxWidth = '';
         }
 
         // 非阻塞 toast 提示
@@ -1765,4 +1832,5 @@
         }
     </script>
 </body>
+
 </html>
